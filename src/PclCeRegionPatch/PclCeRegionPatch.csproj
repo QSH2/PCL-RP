@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>latest</LangVersion>
+        <AssemblyName>pcl-ce-regionpatch</AssemblyName>
+        <RootNamespace>PclCeRegionPatch</RootNamespace>
+        <Version>1.0.0</Version>
+        <Authors>PCL-CE-RegionPatch contributors</Authors>
+        <Description>Offline patcher that removes the mainland-China region gate from a user-owned official PCL CE single-file build.</Description>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryType>git</RepositoryType>
+        <Deterministic>true</Deterministic>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+    </ItemGroup>
+
+</Project>

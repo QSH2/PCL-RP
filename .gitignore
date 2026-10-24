@@ -1,0 +1,25 @@
+# Build outputs
+bin/
+obj/
+artifacts/
+dist/
+out/
+
+# .NET / IDE
+.vs/
+*.user
+*.suo
+*.pdb
+*.dll
+*.exe
+
+# Never commit third-party binaries or traces of them
+*.zip
+*.7z
+*.patch.bak
+*.asc
+*.sigstore.json
+
+# OS junk
+.DS_Store
+Thumbs.db
