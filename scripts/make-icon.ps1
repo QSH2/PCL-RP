@@ -1,11 +1,11 @@
 # Generates src/PclCeRegionPatch.Gui/app.ico (multi-size Windows icon) with GDI+.
-# Design: blue rounded square + white download arrow + green check badge.
+# Design: flat Fluent-blue rounded square with a clean white download glyph.
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/make-icon.ps1
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$outIco = Join-Path $repoRoot 'src/PclCeRegionPatch.Gui\app.ico'
+$outIco = Join-Path $repoRoot 'src\PclCeRegionPatch.Gui\app.ico'
 $sizes = @(16, 24, 32, 48, 64, 128, 256)
 
 function New-RoundedPath([single]$w, [single]$h, [single]$r) {
@@ -23,57 +23,37 @@ function New-IconPng([int]$size, [string]$path) {
     $bmp = New-Object System.Drawing.Bitmap($size, $size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-    $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
-    $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
     $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
     $g.Clear([System.Drawing.Color]::Transparent)
 
-    # Rounded square with a diagonal blue gradient.
-    $radius = [single]($size * 0.235)
+    # Flat Fluent-blue rounded square (no gradient, no badge).
+    $radius = [single]($size * 0.225)
     $pathGeo = New-RoundedPath ([single]$size) ([single]$size) $radius
-    $start = New-Object System.Drawing.Point(0, 0)
-    $end = New-Object System.Drawing.Point($size, $size)
-    $blue1 = [System.Drawing.Color]::FromArgb(8, 78, 140)
-    $blue2 = [System.Drawing.Color]::FromArgb(41, 169, 242)
-    $brush = New-Object System.Drawing.Drawing2D.LinearGradientBrush($start, $end, $blue1, $blue2)
-    $g.FillPath($brush, $pathGeo)
+    $background = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(15, 108, 189))
+    $g.FillPath($background, $pathGeo)
 
-    # White download arrow (Segoe MDL2 Assets U+E896).
-    $glyph = [string][char]0xE896
-    $font = New-Object System.Drawing.Font('Segoe MDL2 Assets', [single]($size * 0.58), [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
-    $fmt = New-Object System.Drawing.StringFormat
-    $fmt.Alignment = [System.Drawing.StringAlignment]::Center
-    $fmt.LineAlignment = [System.Drawing.StringAlignment]::Center
-    $glyphRect = New-Object System.Drawing.RectangleF([single](-$size * 0.06), [single](-$size * 0.10), [single]$size, [single]$size)
-    $g.DrawString($glyph, $font, [System.Drawing.Brushes]::White, $glyphRect, $fmt)
+    # White download glyph: shaft, chevron head, baseline.
+    $stroke = [single]([math]::Max(1.2, $size * 0.075))
+    $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, $stroke)
+    $pen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
+    $pen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
+    $pen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
 
-    # Small green check badge (skipped for the tiniest sizes to stay readable).
-    if ($size -ge 20) {
-        $badgeD = [single]($size * 0.38)
-        $bx = [single]($size - $badgeD - $size * 0.045)
-        $by = [single]($size - $badgeD - $size * 0.045)
-        $green = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(34, 197, 94))
-        $g.FillEllipse($green, $bx, $by, $badgeD, $badgeD)
-        $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, [single]([math]::Max(1.1, $size * 0.052)))
-        $pen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
-        $pen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-        $pen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
-        $points = @(
-            (New-Object System.Drawing.PointF([single]($bx + $badgeD * 0.22), [single]($by + $badgeD * 0.52))),
-            (New-Object System.Drawing.PointF([single]($bx + $badgeD * 0.42), [single]($by + $badgeD * 0.72))),
-            (New-Object System.Drawing.PointF([single]($bx + $badgeD * 0.80), [single]($by + $badgeD * 0.28)))
-        )
-        $g.DrawLines($pen, $points)
-        $pen.Dispose()
-        $green.Dispose()
-    }
+    $centerX = [single]($size / 2)
+    $g.DrawLine($pen, $centerX, [single]($size * 0.225), $centerX, [single]($size * 0.575))
+    $g.DrawLines($pen, @(
+        (New-Object System.Drawing.PointF([single]($size * 0.325), [single]($size * 0.425))),
+        (New-Object System.Drawing.PointF($centerX, [single]($size * 0.605))),
+        (New-Object System.Drawing.PointF([single]($size * 0.675), [single]($size * 0.425)))
+    ))
+    $g.DrawLine($pen, [single]($size * 0.285), [single]($size * 0.795), [single]($size * 0.715), [single]($size * 0.795))
 
+    $pen.Dispose()
+    $background.Dispose()
+    $pathGeo.Dispose()
     $g.Dispose()
     $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
     $bmp.Dispose()
-    $font.Dispose()
-    $brush.Dispose()
-    $pathGeo.Dispose()
 }
 
 # Render each size, then pack them into a PNG-compressed ICO file.

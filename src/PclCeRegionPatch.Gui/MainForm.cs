@@ -10,7 +10,7 @@ namespace PclCeRegionPatch.Gui;
 internal sealed class MainForm : Form
 {
     private const string AppTitle = "PCL 下载限制补丁工具";
-    private const string AppVersion = "1.2.1";
+    private const string AppVersion = "1.2.2";
 
     private static readonly Color Accent = Color.FromArgb(0, 102, 184);
     private static readonly Color OkColor = Color.FromArgb(16, 124, 16);
