@@ -171,6 +171,9 @@ laws and the upstream licenses.
 
 ## Changelog
 
+- **v1.2.1**: redesigned the application icon (download arrow + check); the status row is now
+  product-specific: "region restriction status" for PCL CE and "download feature status" for
+  PCL official (which removed the feature entirely rather than restricting a region).
 - **v1.2.0**: added PCL official 2.99.0.0 support (rebuild download-page version loader, restore
   the modify-page Minecraft card); product auto-detection in GUI/CLI; new screenshots.
 - **v1.1.0**: WinForms GUI, application icon, author credits.

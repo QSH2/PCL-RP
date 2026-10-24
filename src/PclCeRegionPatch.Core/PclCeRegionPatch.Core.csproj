@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -7,7 +7,7 @@
         <LangVersion>latest</LangVersion>
         <RootNamespace>PclCeRegionPatch</RootNamespace>
         <AssemblyName>PclCeRegionPatch.Core</AssemblyName>
-        <Version>1.2.0</Version>
+        <Version>1.2.1</Version>
         <Authors>PCL-CE-RegionPatch contributors</Authors>
         <Description>Core library: locates the embedded PCL CE main assembly and patches the region-restriction methods.</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>

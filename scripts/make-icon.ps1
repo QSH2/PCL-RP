@@ -1,10 +1,11 @@
 # Generates src/PclCeRegionPatch.Gui/app.ico (multi-size Windows icon) with GDI+.
+# Design: blue rounded square + white download arrow + green check badge.
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/make-icon.ps1
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$outIco = Join-Path $repoRoot 'src\PclCeRegionPatch.Gui\app.ico'
+$outIco = Join-Path $repoRoot 'src/PclCeRegionPatch.Gui\app.ico'
 $sizes = @(16, 24, 32, 48, 64, 128, 256)
 
 function New-RoundedPath([single]$w, [single]$h, [single]$r) {
@@ -24,35 +25,36 @@ function New-IconPng([int]$size, [string]$path) {
     $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
     $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
     $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
     $g.Clear([System.Drawing.Color]::Transparent)
 
-    # Blue rounded square with a diagonal gradient.
-    $radius = [single]($size * 0.22)
+    # Rounded square with a diagonal blue gradient.
+    $radius = [single]($size * 0.235)
     $pathGeo = New-RoundedPath ([single]$size) ([single]$size) $radius
     $start = New-Object System.Drawing.Point(0, 0)
     $end = New-Object System.Drawing.Point($size, $size)
-    $blue1 = [System.Drawing.Color]::FromArgb(11, 95, 165)
-    $blue2 = [System.Drawing.Color]::FromArgb(47, 163, 247)
+    $blue1 = [System.Drawing.Color]::FromArgb(8, 78, 140)
+    $blue2 = [System.Drawing.Color]::FromArgb(41, 169, 242)
     $brush = New-Object System.Drawing.Drawing2D.LinearGradientBrush($start, $end, $blue1, $blue2)
     $g.FillPath($brush, $pathGeo)
 
-    # Wrench glyph (Segoe MDL2 Assets U+E90F) in white.
-    $glyph = [string][char]0xE90F
-    $font = New-Object System.Drawing.Font('Segoe MDL2 Assets', [single]($size * 0.56), [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
+    # White download arrow (Segoe MDL2 Assets U+E896).
+    $glyph = [string][char]0xE896
+    $font = New-Object System.Drawing.Font('Segoe MDL2 Assets', [single]($size * 0.58), [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
     $fmt = New-Object System.Drawing.StringFormat
     $fmt.Alignment = [System.Drawing.StringAlignment]::Center
     $fmt.LineAlignment = [System.Drawing.StringAlignment]::Center
-    $glyphRect = New-Object System.Drawing.RectangleF(0, [single](-$size * 0.04), [single]$size, [single]$size)
+    $glyphRect = New-Object System.Drawing.RectangleF([single](-$size * 0.06), [single](-$size * 0.10), [single]$size, [single]$size)
     $g.DrawString($glyph, $font, [System.Drawing.Brushes]::White, $glyphRect, $fmt)
 
     # Small green check badge (skipped for the tiniest sizes to stay readable).
-    if ($size -ge 24) {
-        $badgeD = [single]($size * 0.42)
-        $bx = [single]($size - $badgeD - $size * 0.04)
-        $by = [single]($size - $badgeD - $size * 0.04)
-        $green = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(46, 204, 113))
+    if ($size -ge 20) {
+        $badgeD = [single]($size * 0.38)
+        $bx = [single]($size - $badgeD - $size * 0.045)
+        $by = [single]($size - $badgeD - $size * 0.045)
+        $green = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(34, 197, 94))
         $g.FillEllipse($green, $bx, $by, $badgeD, $badgeD)
-        $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, [single]([math]::Max(1.2, $size * 0.055)))
+        $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, [single]([math]::Max(1.1, $size * 0.052)))
         $pen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
         $pen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
         $pen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round

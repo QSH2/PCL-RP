@@ -48,9 +48,10 @@ internal static class OfficialPclPatcher
             $"运行时：{assembly.MainModule.Runtime}（.NET Framework）",
             "限制方式：编译期常量 ModSecret.RestrictMcDownload = True",
             "可恢复入口：下载页 Minecraft 版本列表、实例修改页的 Minecraft 卡片",
+            "限制范围：全量禁用 MC 下载（不是按地区判断）",
             "说明：上游在发布版中删除了整合包安装等入口的代码，本工具暂不恢复该部分"
         };
-        details.Add(isPatched ? "地区限制：已解除" : "地区限制：尚未解除");
+        details.Add(isPatched ? "下载限制：已解除（MC 下载功能已恢复）" : "下载限制：未解除（MC 下载功能受限）");
 
         return new PatchInspection
         {

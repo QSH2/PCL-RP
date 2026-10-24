@@ -10,7 +10,7 @@ namespace PclCeRegionPatch.Gui;
 internal sealed class MainForm : Form
 {
     private const string AppTitle = "PCL 下载限制补丁工具";
-    private const string AppVersion = "1.2.0";
+    private const string AppVersion = "1.2.1";
 
     private static readonly Color Accent = Color.FromArgb(0, 102, 184);
     private static readonly Color OkColor = Color.FromArgb(16, 124, 16);
@@ -31,6 +31,7 @@ internal sealed class MainForm : Form
     private readonly Label _lblAssemblyValue = new();
     private readonly Label _lblStatusValue = new();
     private readonly Label _lblHint = new();
+    private Label? _lblStatusKey;
 
     private bool _busy;
     private bool _hasValidInput;
@@ -77,8 +78,7 @@ internal sealed class MainForm : Form
 
         var lblSubtitle = new Label
         {
-            Text = "第三方独立工具，与 PCL-Community、龙腾猫跃（LTCat）无隶属关系。支持 PCL CE 与 PCL 官方版。",
-            Location = new Point(20, 48),
+            Text = "第三方独立工具，与 PCL-Community、龙腾猫跃（LTCat）无隶属关系。支持 PCL CE 与 PCL 官方版。",            Location = new Point(20, 48),
             Size = new Size(764, 20),
             ForeColor = MutedColor,
             AutoEllipsis = true
@@ -121,7 +121,7 @@ internal sealed class MainForm : Form
         AddKeyValue(grpInfo, "文件大小", 24, _lblSizeValue);
         AddKeyValue(grpInfo, "版本", 48, _lblVersionValue);
         AddKeyValue(grpInfo, "识别结果", 72, _lblAssemblyValue);
-        AddKeyValue(grpInfo, "地区限制状态", 96, _lblStatusValue);
+        _lblStatusKey = AddKeyValue(grpInfo, "地区限制状态", 96, _lblStatusValue);
         _lblStatusValue.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Bold);
 
         // ---- output group ----
@@ -249,7 +249,7 @@ internal sealed class MainForm : Form
         return group;
     }
 
-    private static void AddKeyValue(GroupBox group, string key, int y, Label valueLabel)
+    private static Label AddKeyValue(GroupBox group, string key, int y, Label valueLabel)
     {
         var keyLabel = new Label
         {
@@ -264,6 +264,7 @@ internal sealed class MainForm : Form
         valueLabel.Size = new Size(632, 20);
         valueLabel.AutoEllipsis = true;
         group.Controls.Add(valueLabel);
+        return keyLabel;
     }
 
     // ------------------------------------------------------------------ actions
@@ -272,8 +273,8 @@ internal sealed class MainForm : Form
     {
         using var dialog = new OpenFileDialog
         {
-            Title = "选择官方 PCL CE 单文件 exe",
-            Filter = "PCL CE 可执行文件 (*.exe)|*.exe|所有文件 (*.*)|*.*",
+            Title = "选择官方 PCL CE 或 PCL 官方版 exe",
+            Filter = "PCL 可执行文件 (*.exe)|*.exe|所有文件 (*.*)|*.*",
             CheckFileExists = true
         };
         if (dialog.ShowDialog(this) == DialogResult.OK)
@@ -327,18 +328,30 @@ internal sealed class MainForm : Form
             _lblVersionValue.Text = version;
             _lblAssemblyValue.Text = $"{inspection.ProductName} {inspection.Version}";
 
+            var isOfficial = inspection.Target == PatchTarget.PclOfficial;
+            if (_lblStatusKey is not null)
+                _lblStatusKey.Text = isOfficial ? "下载功能状态" : "地区限制状态";
+
             Log($"检测：{path}");
             foreach (var detail in inspection.Details)
                 Log("  " + detail);
 
             if (inspection.IsPatched)
             {
-                SetStatus("✔ 已解除地区限制（该文件已经打过补丁）", OkColor);
-                Log("状态：该文件已打过补丁，地区限制已解除。");
+                SetStatus(isOfficial
+                        ? "✔ MC 下载功能已恢复（该文件已经打过补丁）"
+                        : "✔ 已解除地区限制（该文件已经打过补丁）",
+                    OkColor);
+                Log(isOfficial
+                    ? "状态：该文件已打过补丁，MC 下载功能已恢复。"
+                    : "状态：该文件已打过补丁，地区限制已解除。");
             }
             else
             {
-                SetStatus("尚未解除地区限制（可以进行打补丁）", WarnColor);
+                SetStatus(isOfficial
+                        ? "MC 下载功能仍受限（可以进行打补丁）"
+                        : "尚未解除地区限制（可以进行打补丁）",
+                    WarnColor);
                 Log("状态：可以打补丁。");
             }
 
@@ -421,9 +434,14 @@ internal sealed class MainForm : Form
 
             var recheck = await Task.Run(() => PatchEngine.Inspect(File.ReadAllBytes(output)));
             _lblAssemblyValue.Text = $"{recheck.ProductName} {recheck.Version}";
+            var recheckOfficial = recheck.Target == PatchTarget.PclOfficial;
+            if (_lblStatusKey is not null)
+                _lblStatusKey.Text = recheckOfficial ? "下载功能状态" : "地区限制状态";
             Log($"已生成：{output}（{patch.Output.Length:N0} 字节）");
             Log("提示：该文件是官方软件的修改副本，请仅个人使用，不要分发给他人。");
-            SetStatus(recheck.IsPatched ? "✔ 补丁成功，地区限制已解除" : "补丁已写入，但校验未通过",
+            SetStatus(!recheck.IsPatched
+                    ? "补丁已写入，但校验未通过"
+                    : recheckOfficial ? "✔ 补丁成功，MC 下载功能已恢复" : "✔ 补丁成功，地区限制已解除",
                 recheck.IsPatched ? OkColor : ErrColor);
             _lastOutputPath = output;
             _btnOpenDir.Enabled = true;
