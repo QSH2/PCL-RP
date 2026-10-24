@@ -3,6 +3,8 @@
 > Independent third-party tool. **Not affiliated with, authorized by, or endorsed by**
 > PCL-Community or LTCat (龙腾猫跃). Please do not report issues caused by this tool to the
 > upstream repositories.
+>
+> Author: **清水Shimizu** · GitHub [@QSH36](https://github.com/QSH36) · e-mail shimizu-sk@qq.com · contact for removal if anything infringes.
 
 **This repository contains no PCL source code, binaries, or credentials, and offers no
 pre-patched downloads.** It provides tools that apply a controlled, local modification to a
@@ -148,6 +150,13 @@ The upstream *PCL Distribution Limited License* only grants redistribution of **
 so the patched output must **not** be redistributed. Using this tool to modify software and then
 running the modified software is your own responsibility; you must comply with your local laws and
 the upstream licenses.
+
+## Author
+
+- Author: **清水Shimizu**
+- GitHub: [@QSH36](https://github.com/QSH36)
+- E-mail: shimizu-sk@qq.com
+- Contact the author for removal if anything infringes.
 
 ## Disclaimer
 

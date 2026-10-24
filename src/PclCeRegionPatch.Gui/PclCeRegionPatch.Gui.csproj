@@ -10,13 +10,17 @@
         <AssemblyName>pcl-ce-regionpatch-gui</AssemblyName>
         <RootNamespace>PclCeRegionPatch.Gui</RootNamespace>
         <Version>1.1.0</Version>
-        <Authors>PCL-CE-RegionPatch contributors</Authors>
+        <Authors>清水Shimizu</Authors>
+        <Company>清水Shimizu</Company>
+        <Copyright>© 2026 清水Shimizu</Copyright>
         <Description>GUI for removing the mainland-China region gate from a user-owned official PCL CE single-file build.</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <ApplicationIcon>app.ico</ApplicationIcon>
         <Deterministic>true</Deterministic>
     </PropertyGroup>
 
     <ItemGroup>
+        <EmbeddedResource Include="app.ico" />
         <ProjectReference Include="..\PclCeRegionPatch.Core\PclCeRegionPatch.Core.csproj" />
     </ItemGroup>
 

@@ -2,10 +2,12 @@
 
 > **独立的第三方工具**，与 PCL-Community、龙腾猫跃（LTCat）无隶属、无授权、无背书关系。
 > 请勿向官方仓库反馈由本工具产生的问题。
+>
+> 制作人：**清水Shimizu** · GitHub [@QSH36](https://github.com/QSH36) · 邮箱 shimizu-sk@qq.com · 如有侵权请联系删除
 
-**本仓库不包含任何 PCL 的源代码、二进制或密钥，也不提供任何成品下载。** 它只提供一个命令行
-工具：在**你自己的电脑上**，对**你自己合法获取**的官方 PCL CE 单文件 exe 做受控修改，移除
-「中国大陆地区不可用」的判断。
+**本仓库不包含任何 PCL 的源代码、二进制或密钥，也不提供任何成品下载。** 它只提供本地工具
+（命令行版与 Windows 图形界面版）：在**你自己的电脑上**，对**你自己合法获取**的官方 PCL CE
+单文件 exe 做受控修改，移除「中国大陆地区不可用」的判断。
 
 上游致谢：
 
@@ -109,8 +111,9 @@ dotnet build src/PclCeRegionPatch/PclCeRegionPatch.csproj -c Release
 ```text
 src/PclCeRegionPatch.Core/   # 核心库：定位内嵌程序集、解析 PE、打 IL 补丁
 src/PclCeRegionPatch/        # 命令行版（跨平台，net10.0）
-src/PclCeRegionPatch.Gui/    # Windows 图形界面版（WinForms，net10.0-windows）
-docs/                        # 截图
+src/PclCeRegionPatch.Gui/    # Windows 图形界面版（WinForms，net10.0-windows，含 app.ico）
+scripts/                     # 杂项脚本（make-icon.ps1：生成多尺寸应用图标）
+docs/                        # 截图与图标预览
 ```
 
 ## 用法
@@ -195,6 +198,13 @@ PCL CE 使用 .NET **单文件发布**：exe = apphost PE + 追加的 bundle，�
   请不要分发本工具的输出文件。
 - 本工具与上游无隶属关系；使用本工具修改软件、以及之后如何使用修改后的软件，均由你自行负责，
   并应遵守当地法律法规与上游许可。
+
+## 制作人
+
+- 制作人：**清水Shimizu**
+- GitHub：[@QSH36](https://github.com/QSH36)
+- 联系邮箱：shimizu-sk@qq.com
+- 如有侵权请联系删除（同上邮箱）。
 
 ## 免责声明
 

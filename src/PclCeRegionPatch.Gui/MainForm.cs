@@ -39,7 +39,7 @@ internal sealed class MainForm : Form
     public MainForm(string? initialInput)
     {
         Text = AppTitle;
-        ClientSize = new Size(800, 600);
+        ClientSize = new Size(800, 620);
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
@@ -48,6 +48,7 @@ internal sealed class MainForm : Form
         Font = new Font("Microsoft YaHei UI", 9F);
         BackColor = Color.FromArgb(246, 248, 251);
         AllowDrop = true;
+        Icon = LoadAppIcon();
 
         BuildUi();
 
@@ -173,8 +174,8 @@ internal sealed class MainForm : Form
         var grpLog = new GroupBox
         {
             Text = "日志",
-            Location = new Point(16, 470),
-            Size = new Size(768, 86)
+            Location = new Point(16, 462),
+            Size = new Size(768, 84)
         };
         Controls.Add(grpLog);
 
@@ -189,10 +190,49 @@ internal sealed class MainForm : Form
 
         // ---- footer ----
         _lblHint.Text = "补丁后的文件是官方软件的修改副本：仅供个人使用，请勿再分发。使用前请阅读 README / DISCLAIMER。";
-        _lblHint.Location = new Point(16, 564);
-        _lblHint.Size = new Size(768, 20);
+        _lblHint.Location = new Point(16, 552);
+        _lblHint.Size = new Size(768, 18);
         _lblHint.ForeColor = MutedColor;
         Controls.Add(_lblHint);
+
+        // ---- author / credits ----
+        var lblAuthor = new Label
+        {
+            Text = "制作人：清水Shimizu",
+            Location = new Point(16, 576),
+            Size = new Size(148, 18),
+            ForeColor = Color.FromArgb(70, 70, 70)
+        };
+        Controls.Add(lblAuthor);
+
+        var lnkGitHub = new LinkLabel
+        {
+            Text = "GitHub：QSH36",
+            Location = new Point(166, 576),
+            Size = new Size(118, 18),
+            LinkColor = Accent
+        };
+        lnkGitHub.LinkClicked += (_, _) => OpenUrl("https://github.com/QSH36");
+        Controls.Add(lnkGitHub);
+
+        var lnkMail = new LinkLabel
+        {
+            Text = "邮箱：shimizu-sk@qq.com",
+            Location = new Point(286, 576),
+            Size = new Size(190, 18),
+            LinkColor = Accent
+        };
+        lnkMail.LinkClicked += (_, _) => OpenUrl("mailto:shimizu-sk@qq.com?subject=PCL-CE-RegionPatch");
+        Controls.Add(lnkMail);
+
+        var lblDelete = new Label
+        {
+            Text = "如有侵权请联系删除",
+            Location = new Point(482, 576),
+            Size = new Size(140, 18),
+            ForeColor = MutedColor
+        };
+        Controls.Add(lblDelete);
 
         Log($"PCL CE 区域限制补丁工具 v{AppVersion} · 仅修改本地官方单文件 exe，不接触官方密钥。");
     }
@@ -462,6 +502,40 @@ internal sealed class MainForm : Form
         _logBox.AppendText(message);
         _logBox.SelectionStart = _logBox.TextLength;
         _logBox.ScrollToCaret();
+    }
+
+    private static void OpenUrl(string url)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch
+        {
+            // Ignore: opening a browser/mail client is a convenience only.
+        }
+    }
+
+    private static Icon LoadAppIcon()
+    {
+        try
+        {
+            using var stream = typeof(MainForm).Assembly.GetManifestResourceStream("PclCeRegionPatch.Gui.app.ico");
+            if (stream is not null) return new Icon(stream);
+        }
+        catch
+        {
+            // fall back to the executable icon below
+        }
+
+        try
+        {
+            return Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? SystemIcons.Application;
+        }
+        catch
+        {
+            return SystemIcons.Application;
+        }
     }
 
     private void OnDragEnter(object? sender, DragEventArgs e)
