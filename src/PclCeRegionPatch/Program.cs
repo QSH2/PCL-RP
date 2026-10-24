@@ -6,7 +6,7 @@ namespace PclCeRegionPatch;
 internal static class Program
 {
     private const string ToolName = "pcl-ce-regionpatch";
-    private const string ToolVersion = "1.2.2";
+    private const string ToolVersion = "1.2.3";
 
     private static int Main(string[] args)
     {

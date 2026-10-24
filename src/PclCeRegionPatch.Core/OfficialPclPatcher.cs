@@ -307,23 +307,33 @@ internal static class OfficialPclPatcher
         var instructions = method.Body.Instructions.ToList();
         var il = method.Body.GetILProcessor();
         var patched = 0;
+        var alreadyVisible = 0;
         for (var i = 1; i < instructions.Count - 1; i++)
         {
-            if (instructions[i].OpCode != OpCodes.Ldc_I4_2) continue;
             if (instructions[i - 1].Operand is not MethodReference previous ||
                 previous.Name != "get_CardMinecraft") continue;
             if (instructions[i + 1].Operand is not MethodReference next ||
                 next.Name != "set_Visibility") continue;
 
-            il.Replace(instructions[i], Instruction.Create(OpCodes.Ldc_I4_0));
-            patched++;
+            if (instructions[i].OpCode == OpCodes.Ldc_I4_2)
+            {
+                il.Replace(instructions[i], Instruction.Create(OpCodes.Ldc_I4_0));
+                patched++;
+            }
+            else if (instructions[i].OpCode == OpCodes.Ldc_I4_0)
+            {
+                alreadyVisible++;
+            }
         }
 
-        if (patched == 0)
+        if (patched == 0 && alreadyVisible == 0)
             throw new PatchNotSupportedException(
                 "未能定位修改页的 Minecraft 卡片可见性设置，可能是未适配的版本。");
 
-        steps.Add($"恢复 PageDownloadModify.LoadInstanceFinished 中 Minecraft 卡片的可见性（{patched} 处）");
+        if (patched > 0)
+            steps.Add($"恢复 PageDownloadModify.LoadInstanceFinished 中 Minecraft 卡片的可见性（{patched} 处）");
+        else
+            steps.Add("PageDownloadModify 中 Minecraft 卡片已经是 Visible，无需再次修改");
     }
 
     // ------------------------------------------------------------------ verification

@@ -171,6 +171,9 @@ laws and the upstream licenses.
 
 ## Changelog
 
+- **v1.2.3**: PCL-style icon (navy frame + blue inner square + white "P"); fixed the
+  "re-patch" issue where patching an already-patched PCL official build failed the
+  Minecraft-card visibility check (now idempotent; CE double-patching stays byte-identical).
 - **v1.2.2**: removed the green check badge from the icon; replaced with a flat blue download
   glyph (no gradient / badge, multi-size 16–256).
 - **v1.2.1**: redesigned the application icon (download arrow + check); the status row is now

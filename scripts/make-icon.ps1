@@ -1,5 +1,5 @@
 # Generates src/PclCeRegionPatch.Gui/app.ico (multi-size Windows icon) with GDI+.
-# Design: flat Fluent-blue rounded square with a clean white download glyph.
+# Design: PCL-CE-inspired layered blue square with a bold white "P".
 # Usage: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/make-icon.ps1
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -10,7 +10,7 @@ $sizes = @(16, 24, 32, 48, 64, 128, 256)
 
 function New-RoundedPath([single]$w, [single]$h, [single]$r) {
     $path = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $d = 2 * $r
+    $d = 2 * [single]$r
     $path.AddArc(0, 0, $d, $d, 180, 90)
     $path.AddArc($w - $d, 0, $d, $d, 270, 90)
     $path.AddArc($w - $d, $h - $d, $d, $d, 0, 90)
@@ -23,34 +23,50 @@ function New-IconPng([int]$size, [string]$path) {
     $bmp = New-Object System.Drawing.Bitmap($size, $size, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+    $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
     $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
     $g.Clear([System.Drawing.Color]::Transparent)
 
-    # Flat Fluent-blue rounded square (no gradient, no badge).
-    $radius = [single]($size * 0.225)
-    $pathGeo = New-RoundedPath ([single]$size) ([single]$size) $radius
-    $background = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(15, 108, 189))
-    $g.FillPath($background, $pathGeo)
+    $s = [single]$size
 
-    # White download glyph: shaft, chevron head, baseline.
-    $stroke = [single]([math]::Max(1.2, $size * 0.075))
-    $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, $stroke)
-    $pen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
-    $pen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-    $pen.LineJoin = [System.Drawing.Drawing2D.LineJoin]::Round
+    # Outer dark navy rounded square (the "frame").
+    $outer = New-RoundedPath $s $s ([single]($s * 0.20))
+    $navy = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(6, 43, 84))
+    $g.FillPath($navy, $outer)
+    $navy.Dispose()
 
-    $centerX = [single]($size / 2)
-    $g.DrawLine($pen, $centerX, [single]($size * 0.225), $centerX, [single]($size * 0.575))
-    $g.DrawLines($pen, @(
-        (New-Object System.Drawing.PointF([single]($size * 0.325), [single]($size * 0.425))),
-        (New-Object System.Drawing.PointF($centerX, [single]($size * 0.605))),
-        (New-Object System.Drawing.PointF([single]($size * 0.675), [single]($size * 0.425)))
-    ))
-    $g.DrawLine($pen, [single]($size * 0.285), [single]($size * 0.795), [single]($size * 0.715), [single]($size * 0.795))
+    # Inner bright blue rounded square with a soft vertical gradient.
+    $margin = [single]($s * 0.075)
+    $innerSize = $s - 2 * $margin
+    $inner = New-RoundedPath $innerSize $innerSize ([single]($s * 0.145))
+    $gradient = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
+        (New-Object System.Drawing.Point(0, 0)),
+        (New-Object System.Drawing.Point(0, $size)),
+        [System.Drawing.Color]::FromArgb(47, 143, 227),
+        [System.Drawing.Color]::FromArgb(20, 101, 184))
+    $state = $g.Save()
+    $g.TranslateTransform($margin, $margin)
+    $g.FillPath($gradient, $inner)
+    $g.Restore($state)
+    $gradient.Dispose()
+    $inner.Dispose()
 
-    $pen.Dispose()
-    $background.Dispose()
-    $pathGeo.Dispose()
+    # Bold white "P" with a subtle drop shadow.
+    $font = New-Object System.Drawing.Font('Segoe UI', [single]($s * 0.58), [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
+    $format = New-Object System.Drawing.StringFormat
+    $format.Alignment = [System.Drawing.StringAlignment]::Center
+    $format.LineAlignment = [System.Drawing.StringAlignment]::Center
+    $centerY = [single]($s * 0.47)
+    $textRect = New-Object System.Drawing.RectangleF(0, [single]($centerY - $s * 0.5), $s, $s)
+    $shadowRect = New-Object System.Drawing.RectangleF(0, [single]($centerY - $s * 0.5 + $s * 0.012), $s, $s)
+    $shadow = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(70, 0, 0, 0))
+    $g.DrawString('P', $font, $shadow, $shadowRect, $format)
+    $g.DrawString('P', $font, [System.Drawing.Brushes]::White, $textRect, $format)
+    $shadow.Dispose()
+    $font.Dispose()
+    $format.Dispose()
+    $outer.Dispose()
+
     $g.Dispose()
     $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
     $bmp.Dispose()
