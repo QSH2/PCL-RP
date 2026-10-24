@@ -9,8 +9,8 @@ namespace PclCeRegionPatch.Gui;
 
 internal sealed class MainForm : Form
 {
-    private const string AppTitle = "PCL CE 区域限制补丁工具";
-    private const string AppVersion = "1.1.0";
+    private const string AppTitle = "PCL 下载限制补丁工具";
+    private const string AppVersion = "1.2.0";
 
     private static readonly Color Accent = Color.FromArgb(0, 102, 184);
     private static readonly Color OkColor = Color.FromArgb(16, 124, 16);
@@ -77,7 +77,7 @@ internal sealed class MainForm : Form
 
         var lblSubtitle = new Label
         {
-            Text = "第三方独立工具，与 PCL-Community、龙腾猫跃（LTCat）无隶属关系。仅用于修改你自行合法获取的官方 PCL CE 单文件 exe。",
+            Text = "第三方独立工具，与 PCL-Community、龙腾猫跃（LTCat）无隶属关系。支持 PCL CE 与 PCL 官方版。",
             Location = new Point(20, 48),
             Size = new Size(764, 20),
             ForeColor = MutedColor,
@@ -88,7 +88,7 @@ internal sealed class MainForm : Form
         // ---- input group ----
         var grpInput = new GroupBox
         {
-            Text = "第 1 步 · 选择官方 PCL CE 单文件 exe（支持从资源管理器拖拽到窗口）",
+            Text = "第 1 步 · 选择官方 PCL CE 或 PCL 官方版 exe（支持从资源管理器拖拽到窗口）",
             Location = new Point(16, 76),
             Size = new Size(768, 96)
         };
@@ -109,7 +109,7 @@ internal sealed class MainForm : Form
 
         var lblInputHint = new Label
         {
-            Text = "请从官方 Releases 下载 PCL2_CE_Release_x64.exe；请勿使用他人提供的“免限制版”。",
+            Text = "请从官方渠道下载 PCL CE / PCL 官方版；请勿使用他人提供的“免限制版”。",
             Location = new Point(14, 64),
             Size = new Size(740, 20),
             ForeColor = MutedColor
@@ -120,7 +120,7 @@ internal sealed class MainForm : Form
         var grpInfo = CreateGroup("文件信息", 16, 182, 768, 128);
         AddKeyValue(grpInfo, "文件大小", 24, _lblSizeValue);
         AddKeyValue(grpInfo, "版本", 48, _lblVersionValue);
-        AddKeyValue(grpInfo, "内嵌程序集", 72, _lblAssemblyValue);
+        AddKeyValue(grpInfo, "识别结果", 72, _lblAssemblyValue);
         AddKeyValue(grpInfo, "地区限制状态", 96, _lblStatusValue);
         _lblStatusValue.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Bold);
 
@@ -234,7 +234,7 @@ internal sealed class MainForm : Form
         };
         Controls.Add(lblDelete);
 
-        Log($"PCL CE 区域限制补丁工具 v{AppVersion} · 仅修改本地官方单文件 exe，不接触官方密钥。");
+        Log($"PCL 下载限制补丁工具 v{AppVersion} · 支持 PCL CE 与 PCL 官方版，仅修改本地官方 exe，不接触官方密钥。");
     }
 
     private GroupBox CreateGroup(string text, int x, int y, int width, int height)
@@ -325,25 +325,22 @@ internal sealed class MainForm : Form
             var inspection = result.Inspection;
             _lblSizeValue.Text = $"{result.Length:N0} 字节";
             _lblVersionValue.Text = version;
-            _lblAssemblyValue.Text =
-                $"偏移 0x{inspection.AssemblyStart:X} · {inspection.ImageSize:N0} 字节 · " +
-                $"{inspection.SectionCount} 个节 · IL-only = {inspection.IsIlOnly}";
+            _lblAssemblyValue.Text = $"{inspection.ProductName} {inspection.Version}";
+
+            Log($"检测：{path}");
+            foreach (var detail in inspection.Details)
+                Log("  " + detail);
 
             if (inspection.IsPatched)
             {
                 SetStatus("✔ 已解除地区限制（该文件已经打过补丁）", OkColor);
-                Log($"检测：{path}");
                 Log("状态：该文件已打过补丁，地区限制已解除。");
             }
             else
             {
                 SetStatus("尚未解除地区限制（可以进行打补丁）", WarnColor);
-                Log($"检测：{path}");
-                Log($"内嵌程序集位于文件偏移 0x{inspection.AssemblyStart:X}，共 {inspection.MethodCount} 个目标方法。");
+                Log("状态：可以打补丁。");
             }
-
-            foreach (var method in inspection.Methods)
-                Log("  " + method);
 
             _outputBox.Text = BuildDefaultOutputPath(path);
             _hasValidInput = true;
@@ -413,18 +410,21 @@ internal sealed class MainForm : Form
             {
                 var data = File.ReadAllBytes(input);
                 var result = PatchEngine.Apply(data);
-                File.WriteAllBytes(output, data);
+                File.WriteAllBytes(output, result.Output);
                 return result;
             });
 
-            foreach (var line in patch.PatchedMethods)
-                Log("patched: " + line);
+            foreach (var line in patch.Steps)
+                Log("step   : " + line);
             foreach (var line in patch.Verification)
                 Log("verify : " + line);
 
-            Log($"已生成：{output}");
+            var recheck = await Task.Run(() => PatchEngine.Inspect(File.ReadAllBytes(output)));
+            _lblAssemblyValue.Text = $"{recheck.ProductName} {recheck.Version}";
+            Log($"已生成：{output}（{patch.Output.Length:N0} 字节）");
             Log("提示：该文件是官方软件的修改副本，请仅个人使用，不要分发给他人。");
-            SetStatus("✔ 补丁成功，地区限制已解除", OkColor);
+            SetStatus(recheck.IsPatched ? "✔ 补丁成功，地区限制已解除" : "补丁已写入，但校验未通过",
+                recheck.IsPatched ? OkColor : ErrColor);
             _lastOutputPath = output;
             _btnOpenDir.Enabled = true;
             _btnPatch.Text = "重新打补丁";

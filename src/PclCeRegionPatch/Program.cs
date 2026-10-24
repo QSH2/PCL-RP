@@ -6,7 +6,7 @@ namespace PclCeRegionPatch;
 internal static class Program
 {
     private const string ToolName = "pcl-ce-regionpatch";
-    private const string ToolVersion = "1.1.0";
+    private const string ToolVersion = "1.2.0";
 
     private static int Main(string[] args)
     {
@@ -78,16 +78,15 @@ internal static class Program
             return 3;
         }
 
-        Console.WriteLine($"assembly  : file offset 0x{inspection.AssemblyStart:X}, image 0x{inspection.ImageSize:X}, " +
-                          $"sections {inspection.SectionCount}, IL-only {inspection.IsIlOnly}, " +
-                          $"managed-native-header {inspection.HasManagedNativeHeader}");
-        foreach (var method in inspection.Methods) Console.WriteLine($"method    : {method}");
+        Console.WriteLine($"target    : {inspection.ProductName} {inspection.Version}");
+        foreach (var detail in inspection.Details)
+            Console.WriteLine($"info      : {detail}");
 
         if (checkOnly)
         {
             Console.WriteLine(inspection.IsPatched
-                ? "status    : PATCHED (the region restriction is disabled)"
-                : "status    : NOT PATCHED (the region restriction is active)");
+                ? "status    : PATCHED (the download restriction is disabled)"
+                : "status    : NOT PATCHED (the download restriction is active)");
             return inspection.IsPatched ? 0 : 1;
         }
 
@@ -109,10 +108,9 @@ internal static class Program
             return 3;
         }
 
-        File.WriteAllBytes(output, data);
-
-        Console.WriteLine($"output    : {output} ({data.Length:N0} bytes)");
-        foreach (var line in result.PatchedMethods) Console.WriteLine($"patched   : {line}");
+        File.WriteAllBytes(output, result.Output);
+        Console.WriteLine($"output    : {output} ({result.Output.Length:N0} bytes)");
+        foreach (var step in result.Steps) Console.WriteLine($"step      : {step}");
         foreach (var line in result.Verification) Console.WriteLine($"verify    : {line}");
         Console.WriteLine();
         Console.WriteLine("done. The output is a MODIFIED copy of the official build: keep it for personal use only,");
@@ -123,10 +121,14 @@ internal static class Program
     private static void PrintHelp()
     {
         Console.WriteLine($"""
-{ToolName} {ToolVersion} - remove the mainland-China region gate from a local copy of PCL CE.
+{ToolName} {ToolVersion} - remove the mainland-China download restriction from a local copy of PCL.
+
+Supported builds:
+  * PCL CE (community edition) official single-file exe
+  * PCL official (.NET Framework) official exe, version 2.99.0.0 currently tested
 
 Usage:
-  {ToolName} [options] <official-pcl-ce.exe>
+  {ToolName} [options] <official-pcl.exe>
 
 Options:
   -o, --output <path>   output path (default: <input>.patched.exe next to the input)
@@ -142,7 +144,10 @@ Exit codes:
   10  unexpected error
 
 Notes:
-  * Only official single-file PCL CE builds with an IL-only main assembly are supported.
+  * PCL CE: only single-file builds with an IL-only main assembly are supported.
+  * PCL official: the restriction was implemented with a compile-time constant, so this tool
+    rebuilds the download-page entry points. Modpack installation entry points were removed by
+    the upstream compiler and are NOT restored.
   * The tool does not extract, embed or modify any credentials.
   * The patched file is a modified copy of the upstream software.
     Do not redistribute it. See DISCLAIMER.md.

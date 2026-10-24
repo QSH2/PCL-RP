@@ -9,7 +9,7 @@
         <LangVersion>latest</LangVersion>
         <AssemblyName>pcl-ce-regionpatch-gui</AssemblyName>
         <RootNamespace>PclCeRegionPatch.Gui</RootNamespace>
-        <Version>1.1.0</Version>
+        <Version>1.2.0</Version>
         <Authors>清水Shimizu</Authors>
         <Company>清水Shimizu</Company>
         <Copyright>© 2026 清水Shimizu</Copyright>

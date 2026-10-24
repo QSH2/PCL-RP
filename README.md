@@ -1,4 +1,4 @@
-# PCL-CE-RegionPatch（PCL CE 区域限制移除补丁工具）
+# PCL 下载限制补丁工具（PCL-CE-RegionPatch）
 
 > **独立的第三方工具**，与 PCL-Community、龙腾猫跃（LTCat）无隶属、无授权、无背书关系。
 > 请勿向官方仓库反馈由本工具产生的问题。
@@ -6,8 +6,8 @@
 > 制作人：**清水Shimizu** · GitHub [@QSH36](https://github.com/QSH36) · 邮箱 shimizu-sk@qq.com · 如有侵权请联系删除
 
 **本仓库不包含任何 PCL 的源代码、二进制或密钥，也不提供任何成品下载。** 它只提供本地工具
-（命令行版与 Windows 图形界面版）：在**你自己的电脑上**，对**你自己合法获取**的官方 PCL CE
-单文件 exe 做受控修改，移除「中国大陆地区不可用」的判断。
+（命令行版与 Windows 图形界面版）：在**你自己的电脑上**，对**你自己合法获取**的官方 exe
+做受控修改，移除「中国大陆地区不可用」的判断。
 
 上游致谢：
 
@@ -16,14 +16,24 @@
 
 ---
 
+## 支持范围
+
+| 产品 | 已测试版本 | 恢复内容 | 状态 |
+| --- | --- | --- | --- |
+| **PCL CE（社区版，.NET 单文件）** | 2.15.1 x64 | 解除中国大陆地区限制：MC 下载、安装、补全、重置、整合包安装、启动时补全 | ✅ 完整恢复 |
+| **PCL 官方版（.NET Framework）** | 2.99.0.0 | 下载页的 **Minecraft 版本列表**（可正常下载/安装原版与加载器）、实例修改页的 Minecraft 卡片 | ✅ 已恢复 |
+| PCL 官方版 · 整合包安装入口 | 2.99.0.0 | 整合包在线安装 | ⚠️ 暂不恢复（见下方说明） |
+
+工具会自动识别输入的是哪种产品，并应用对应的补丁。
+
 ## 背景
 
-2026-10-20 发布的 PCL CE v2.15.1 通过 #3673 / #3676 在中国大陆地区禁用了 Minecraft 的下载、
-安装、补全与整合包安装。上游仓库中目前存在一个**尚未合并**的预留回滚 PR #3677
-（`fix(install): 移除中国大陆地区下载安装限制`）。
-
-本项目是一个独立的外部工具，效果与上述回滚等价，但作用于**二进制**：不需要完整的 .NET 构建
-环境，也不接触任何官方密钥。
+- **PCL CE**：2026-10-20 发布的 v2.15.1 通过 #3673 / #3676 在中国大陆地区禁用了 Minecraft 的
+  下载、安装、补全与整合包安装。上游仓库中有一个**尚未合并**的预留回滚 PR #3677。
+- **PCL 官方版**：2026-10-20 发布的 2.99.0.0 在更新说明中表示「为遵守相关法律法规，PCL 不再
+  提供 MC 下载功能」。其实现方式是新增编译期常量 `ModSecret.RestrictMcDownload = True`，
+  并在下载页、整合包安装等入口加上判断。由于是**编译期常量**，发布版中「未受限」的分支已被
+  编译器剪除，因此不能靠改一个开关恢复，需要重建相应入口的方法体。
 
 ## 图形界面版（GUI，推荐给不想用命令行的用户）
 
@@ -31,8 +41,7 @@
 
 `src/PclCeRegionPatch.Gui` 提供 Windows 图形界面（WinForms / .NET 10）：
 
-- 选择或**拖拽**官方 `PCL2_CE_Release_x64.exe` → 自动显示文件大小、版本、内嵌程序集、
-  **地区限制状态**（已解除 / 尚未解除）；
+- 选择或**拖拽**官方 exe → 自动识别产品（PCL CE / PCL 官方版）、版本、**地区限制状态**；
 - 一键生成 `.patched.exe`，可自定义输出路径、打补丁后直接打开输出位置；
 - 打补丁后的状态：
 
@@ -46,148 +55,107 @@ dotnet publish src/PclCeRegionPatch.Gui/PclCeRegionPatch.Gui.csproj -c Release -
   -p:DebugType=None -p:DebugSymbols=false -o dist
 ```
 
-> 默认是**框架依赖**单文件（约 0.7 MB），需要 .NET 10 Desktop Runtime（PCL CE 本身也依赖它，
+> 默认是**框架依赖**单文件（约 0.8 MB），需要 .NET 10 Desktop Runtime（PCL CE 本身也依赖它，
 > 通常已安装）。如果要在未安装 .NET 10 的电脑上使用，把 `--self-contained false` 换成
 > `--self-contained true`（体积会大很多）。
 
-## 它做了什么
+## 命令行版
 
-把 `PCL.RestrictedFeaturePolicy` 的两个方法体各改写 3 个字节：
+```powershell
+# 构建
+dotnet build PclCeRegionPatch.slnx -c Release
 
-| 方法 | 原行为 | 修改后 |
-| --- | --- | --- |
-| `Check(string, bool)` | 按地区判断是否拦截功能 | `ldc.i4.1; ret`（永远返回 `true`） |
-| `get_IsRestricted()` | 按地区判断是否受限 | `ldc.i4.0; ret`（永远返回 `false`） |
+# 用法（PCL CE 与 PCL 官方版相同）
+pcl-ce-regionpatch PCL2_CE_Release_x64.exe            # PCL CE
+pcl-ce-regionpatch "Plain Craft Launcher 2.exe"       # PCL 官方版
+pcl-ce-regionpatch --check <输入.exe>                  # 仅检查是否已打补丁（0=已打）
+pcl-ce-regionpatch -o <输出.exe> <输入.exe>            # 指定输出路径
+```
 
-因此：不可用状态解除，下载/安装/补全/整合包恢复。
+PCL 官方版补丁的实际输出示例：
 
-- **不读取、不导出、不修改任何官方密钥**（`MS_CLIENT_ID`、`CURSEFORGE_API_KEY` 等原样保留）；
-- 输出文件与官方原版**大小完全相同**（实测仅 6 字节差异），不重写 PE、不重新打包。
+```text
+input     : ...\Plain Craft Launcher 2.exe (5,980,160 bytes)
+target    : PCL 官方版（.NET Framework） 2.99.0.0
+info      : 目标程序集：Plain Craft Launcher 2 2.99.0.0
+info      : 限制方式：编译期常量 ModSecret.RestrictMcDownload = True
+info      : 可恢复入口：下载页 Minecraft 版本列表、实例修改页的 Minecraft 卡片
+output    : ...\Plain Craft Launcher 2.patched.exe (5,975,040 bytes)
+step      : 从 PCL.Resources 中提取 14 个内嵌依赖程序集用于元数据解析（仅临时目录，完成后删除）
+step      : 重建 PageDownloadInstall.LoaderInit：改为加载真实的 Minecraft 版本列表（DlClientListLoader）
+step      : 恢复 PageDownloadModify.LoadInstanceFinished 中 Minecraft 卡片的可见性（1 处）
+verify    : LoaderInit：已使用 DlClientListLoader 加载真实的 Minecraft 版本列表
+verify    : LoadInstanceFinished：Minecraft 卡片可见性 = Visible
+```
 
-## 它不是什么
+## 原理
 
-- ❌ 不是 PCL CE 的 fork / 修改发行版；本仓库没有 PCL 代码或二进制。
-- ❌ 不提供「下载即用」的修改版 exe，请自行用本工具处理自己的官方副本。
-- ❌ 不提供任何形式的担保，也不保证符合你所在地的法律法规。
+### PCL CE（.NET 单文件）
 
-## 使用范围与合规提示
+PCL CE 使用 .NET 单文件发布：exe = apphost PE + 追加的 bundle，主程序集
+`Plain Craft Launcher 2.dll` 内嵌其中。工具用元数据字符串定位该程序集（校验 PE、要求 IL-only），
+再把 `PCL.RestrictedFeaturePolicy` 的两个方法体原地改成 3 字节的 tiny IL：
 
-本工具由第三方独立开发，不针对任何特定国家或地区进行推广，也不提供成品下载、不收集任何
-用户信息。
+- `Check(string, bool)` → `ldc.i4.1; ret`（永远放行）
+- `get_IsRestricted()` → `ldc.i4.0; ret`（永远不受限）
 
-上游是出于其所在地法律法规的考虑才加入地区限制，本项目只移除这一技术限制。使用前请自行确认：
+文件大小不变，仅 6 字节差异；官方内嵌密钥保持原样。
 
-- 你拥有所修改软件的合法副本；
-- 你的行为（修改软件、运行修改后的软件）不违反你所在地的法律法规；
-- 你理解修改后的软件由你自行使用，本项目不提供任何担保。
+### PCL 官方版（.NET Framework）
 
-如果你对这些条件有疑虑，请不要使用本工具。
+1. 识别 `ModSecret.RestrictMcDownload` 编译期常量，确认是受限的官方版本；
+2. 从启动器自身的 `PCL.Resources` 中临时提取 14 个内嵌依赖程序集（PCLCS、MeloongCore 等），
+   供 Mono.Cecil 解析元数据（处理完立即删除）；
+3. 重建 `PageDownloadInstall.LoaderInit`：改为调用真实的 `DlClientListLoader` 加载版本列表，
+   并注册 `LoadMinecraft_OnFinish` 回调；
+4. 修正 `PageDownloadModify.LoadInstanceFinished` 中 Minecraft 卡片的可见性常量；
+5. 用 Cecil 重写程序集并做 IL 校验。输出文件大小会略有变化，属正常现象。
+
+> 为什么整合包安装不恢复：上游用编译期常量把相关代码整体剪掉了（例如 `ModpackInstall`
+> 分发逻辑在 Release 中已不存在），不是简单的开关，重建这部分等于重写功能，超出补丁工具范围。
+> 下载页的 Mod / 整合包 / 资源包等浏览功能不受影响，只是 PCL 内不再提供「一键安装整合包」。
+
+## 已验证
+
+- **PCL CE 2.15.1**：补丁输出与 2.15.1 的预期结果逐字节一致；GUI 与 CLI 输出 SHA256 相同。
+- **PCL 官方版 2.99.0.0**：GUI/CLI 打补丁后启动正常，下载页成功加载出在线版本列表
+  （26.3、26.4-snapshot-5 及正式版/预览版分类），见下图：
+
+![PCL 官方版补丁后下载页](docs/official-download-page.png)
+
+- GUI 全流程已用自动化测试：载入官方 exe → 点击打补丁 → 输出文件验证通过。
+
+## 已知限制
+
+- **PCL 官方版只测试了 2.99.0.0**；如果后续版本改了类型/方法结构，工具会明确报错而不是产出坏文件，
+  需要更新适配。
+- **PCL 官方版的整合包安装入口暂不恢复**（原因见上）。
+- PCL 官方版补丁会重写程序集，输出文件大小与签名（sigstore）都会变化，属预期行为。
+- PCL CE 只适用于内嵌主程序集为 IL-only 的单文件构建。
+- 修改后的文件属于上游软件的修改副本，**请勿再分发**。
+
+## 安全提示
+
+- 只从官方 Release / 官方渠道获取原始 exe；
+- 不要使用、也不要传播任何第三方提供的「免限制版 / 破解版」exe，它们无法验证是否被植入内容；
+- 不要把你处理后的文件或官方 exe 提交到本仓库的 Issue / PR 中。
 
 ## 环境要求
 
-- Windows 10 1809 或更高（官方 PCL CE 的运行要求）
-- 官方 PCL CE **单文件** exe（v2.15.1 x64 已测试）
+- Windows 10 1809 或更高
+- 官方 PCL CE **单文件** exe，或官方 PCL 官方版 exe（.NET Framework 4.8）
 - .NET 10 SDK（构建工具时需要）
 - .NET 10 Runtime（运行命令行版）/ .NET 10 Desktop Runtime（运行 GUI 版）
-
-## 构建
-
-```powershell
-# 一次构建全部项目（核心库 / 命令行 / GUI）
-dotnet build PclCeRegionPatch.slnx -c Release
-
-# 单独构建命令行版
-dotnet build src/PclCeRegionPatch/PclCeRegionPatch.csproj -c Release
-```
-
-产物：
-
-- 命令行：`src/PclCeRegionPatch/bin/Release/net10.0/pcl-ce-regionpatch.dll`
-- GUI：`src/PclCeRegionPatch.Gui/bin/Release/net10.0-windows/pcl-ce-regionpatch-gui.exe`
-  （单文件发布方式见上文）
 
 ## 仓库结构
 
 ```text
-src/PclCeRegionPatch.Core/   # 核心库：定位内嵌程序集、解析 PE、打 IL 补丁
+src/PclCeRegionPatch.Core/   # 核心库：PCL CE IL 补丁 + PCL 官方版补丁
 src/PclCeRegionPatch/        # 命令行版（跨平台，net10.0）
 src/PclCeRegionPatch.Gui/    # Windows 图形界面版（WinForms，net10.0-windows，含 app.ico）
 scripts/                     # 杂项脚本（make-icon.ps1：生成多尺寸应用图标）
 docs/                        # 截图与图标预览
 ```
-
-## 用法
-
-### GUI 版
-
-直接双击 `pcl-ce-regionpatch-gui.exe`（或从 Release 下载）：
-
-1. 选择 / 拖入官方 `PCL2_CE_Release_x64.exe`；
-2. 确认信息与默认输出路径（默认在原文件旁生成 `.patched.exe`）；
-3. 点击「开始打补丁」，成功后点「打开输出位置」即可。
-
-### 命令行版
-
-```powershell
-# 默认输出 <输入文件名>.patched.exe，且与输入放在同一目录
-pcl-ce-regionpatch PCL2_CE_Release_x64.exe
-
-# 指定输出路径
-pcl-ce-regionpatch -o PCL2_CE_Release_x64_patched.exe PCL2_CE_Release_x64.exe
-
-# 只检查某个文件是否已经打过补丁（退出码 0 = 已打补丁）
-pcl-ce-regionpatch --check PCL2_CE_Release_x64_patched.exe
-```
-
-实际输出示例（对官方 v2.15.1 x64）：
-
-```text
-input     : ...\PCL2_CE_Release_x64.exe (23,486,024 bytes)
-assembly  : file offset 0x59000, image 0x4EA800, sections 2, IL-only True, managed-native-header False
-output    : ...\PCL2_CE_Release_x64.patched.exe (23,486,024 bytes)
-patched   : Check -> ldc.i4.1; ret  (file offset 0xA72B4, old header 0x13)
-patched   : get_IsRestricted -> ldc.i4.0; ret  (file offset 0xA72A5, old header 0x2E)
-verify    : Check: IL_0000: ldc.i4.1 ; IL_0001: ret
-verify    : get_IsRestricted: IL_0000: ldc.i4.0 ; IL_0001: ret
-```
-
-> 运行后把生成的文件改个名字直接用即可。数据目录、配置与官方版共用（便携模式会建在 exe 同目录
-> 的 `PCL` 文件夹）。
-
-## 原理
-
-PCL CE 使用 .NET **单文件发布**：exe = apphost PE + 追加的 bundle，主程序集
-`Plain Craft Launcher 2.dll` 内嵌在 bundle 中且默认不压缩。工具的处理流程：
-
-1. 用只存在于主程序集中的元数据字符串（`RestrictedFeaturePolicy`）定位内嵌程序集起点，
-   并校验它是一个合法的、处于 `IL-only` 状态的 .NET PE（ReadyToRun / 非 .NET 的候选会被拒绝）；
-2. 解析 PE 节表，把方法 RVA 换算为文件偏移；
-3. 用 [Mono.Cecil](https://github.com/jbevain/cecil) 读取程序集，定位 `Check` 与 `get_IsRestricted`；
-4. 原地写入 tiny method body：`0x0A, 0x17, 0x2A` 与 `0x0A, 0x16, 0x2A`；
-5. 重新读取校验 IL 并打印结果。
-
-由于只是原地覆盖方法体，文件大小、PE 布局、bundle 内容都不变。
-
-## 已验证 / 已知限制
-
-已验证：官方 PCL Community Edition v2.15.1 x64（`PCL2_CE_Release_x64.exe`，23,486,024 字节）。
-
-- 命令行版与 GUI 版共用同一套核心逻辑（`PclCeRegionPatch.Core`），打补丁后文件逐字节一致；
-- GUI 版已实际测试：选择官方 exe → 点击打补丁 → 输出文件与命令行结果 SHA256 完全相同；
-- 修改后文件与官方原版大小相同，仅 6 字节差异，官方内嵌密钥保持原样。
-
-限制：
-
-- 只适用于**内嵌主程序集为 IL-only** 的官方单文件构建；如果官方未来改用 ReadyToRun、压缩
-  bundle 或改变类型/方法名，工具会明确报错，而不是产出坏文件。
-- 修改会破坏官方 sigstore 签名（这是预期行为，不影响运行）。
-- 修改后的文件属于上游软件的修改副本，**请勿再分发**（见下方与 [DISCLAIMER.md](DISCLAIMER.md)）。
-
-## 安全提示
-
-- 只从官方 Release 页面（<https://github.com/PCL-Community/PCL-CE/releases>）获取原始 exe；
-- 不要使用、也不要传播任何第三方提供的「免限制版 / 破解版」exe，它们无法验证是否被植入内容；
-- 不要把你处理后的文件或官方 exe 提交到本仓库的 Issue / PR 中。
 
 ## 许可与责任
 
@@ -206,13 +174,22 @@ PCL CE 使用 .NET **单文件发布**：exe = apphost PE + 追加的 bundle，�
 - 联系邮箱：shimizu-sk@qq.com
 - 如有侵权请联系删除（同上邮箱）。
 
+## 更新日志
+
+- **v1.2.0**：新增 PCL 官方版 2.99.0.0 支持（重建下载页版本列表加载、恢复修改页 MC 卡片）；
+  GUI/CLI 自动识别产品并显示对应信息；新增示意图。
+- **v1.1.0**：新增 WinForms GUI、应用图标、制作人署名。
+- **v1.0.0**：PCL CE 2.15.1 补丁工具（命令行）。
+
 ## 免责声明
 
 使用前请阅读 [DISCLAIMER.md](DISCLAIMER.md)。本项目按「现状」提供，不附带任何担保。
 
 ## 相关链接
 
-- 上游 PR #3677（预留回滚）：<https://github.com/PCL-Community/PCL-CE/pull/3677>
+- PCL 官方版 2.99.0.0 发布说明：<https://github.com/Meloong-Git/PCL/releases/tag/2.99.0.0>
+- PCL CE：<https://github.com/PCL-Community/PCL-CE>
+- 上游预留回滚 PR：#3677 <https://github.com/PCL-Community/PCL-CE/pull/3677>
 - 限制引入的 PR：#3673 <https://github.com/PCL-Community/PCL-CE/pull/3673>、#3676 <https://github.com/PCL-Community/PCL-CE/pull/3676>
 - 另一位作者的同类工具（思路参考）：<https://github.com/zhicheng233/PCL2-RegionPatch>
 
@@ -220,10 +197,18 @@ PCL CE 使用 .NET **单文件发布**：exe = apphost PE + 追加的 bundle，�
 
 ## English summary
 
-An independent, third-party CLI tool that removes the mainland-China region gate from a
-**user-owned** official PCL CE single-file build. It rewrites two tiny IL method bodies
-(`Check` → `ldc.i4.1; ret`, `get_IsRestricted` → `ldc.i4.0; ret`), changing 6 bytes in total and
-leaving credentials and file size untouched. This repository contains **no** PCL code, binaries or
-credentials, and provides **no** pre-patched downloads. Not affiliated with PCL or PCL CE. Use only
-on copies you obtained legally; do not redistribute patched binaries; you are responsible for
-complying with local laws and upstream licenses.
+An independent, third-party CLI + GUI tool that removes the mainland-China download restriction
+from **user-owned** official PCL builds:
+
+- **PCL CE** (community edition, .NET single-file): rewrites two tiny IL method bodies
+  (`Check` → `ldc.i4.1; ret`, `get_IsRestricted` → `ldc.i4.0; ret`), changing 6 bytes in total.
+- **PCL official** (.NET Framework, 2.99.0.0): upstream implemented the restriction as a
+  compile-time constant, so the unrestricted code paths were removed by the compiler. This tool
+  rebuilds `PageDownloadInstall.LoaderInit` (real version list loader) and restores the
+  `PageDownloadModify` Minecraft card visibility. Modpack installation entry points are not
+  restored (their code no longer exists in the release build).
+
+This repository contains **no** PCL code, binaries or credentials, and provides **no** pre-patched
+downloads. Not affiliated with PCL or PCL CE. Use only on copies you obtained legally; do not
+redistribute patched binaries; you are responsible for complying with local laws and upstream
+licenses.
