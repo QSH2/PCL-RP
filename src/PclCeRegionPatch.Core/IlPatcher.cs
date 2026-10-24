@@ -120,6 +120,17 @@ internal static class IlPatcher
                && data[absolute + 2] == Ret;
     }
 
+    /// <summary>Returns human-readable descriptions of every method on the target type.</summary>
+    internal static IReadOnlyList<string> DescribeMethods(byte[] data, int assemblyStart, PeImage image)
+    {
+        using var assembly = ReadAssembly(data, assemblyStart, image);
+        var type = FindTargetType(assembly);
+        return type.Methods
+            .Select(method =>
+                $"{method.Name}({string.Join(", ", method.Parameters.Select(parameter => parameter.ParameterType.Name))}) -> {method.ReturnType.Name}")
+            .ToList();
+    }
+
     private static IEnumerable<string> ReadMethodIl(byte[] data, int assemblyStart, PeImage image)
     {
         using var assembly = ReadAssembly(data, assemblyStart, image);

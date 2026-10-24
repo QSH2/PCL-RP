@@ -23,6 +23,31 @@
 本项目是一个独立的外部工具，效果与上述回滚等价，但作用于**二进制**：不需要完整的 .NET 构建
 环境，也不接触任何官方密钥。
 
+## 图形界面版（GUI，推荐给不想用命令行的用户）
+
+![GUI 截图](docs/screenshot.png)
+
+`src/PclCeRegionPatch.Gui` 提供 Windows 图形界面（WinForms / .NET 10）：
+
+- 选择或**拖拽**官方 `PCL2_CE_Release_x64.exe` → 自动显示文件大小、版本、内嵌程序集、
+  **地区限制状态**（已解除 / 尚未解除）；
+- 一键生成 `.patched.exe`，可自定义输出路径、打补丁后直接打开输出位置；
+- 打补丁后的状态：
+
+![打补丁成功](docs/screenshot-success.png)
+
+从 Release 下载 `pcl-ce-regionpatch-gui.exe`，或自行构建：
+
+```powershell
+dotnet publish src/PclCeRegionPatch.Gui/PclCeRegionPatch.Gui.csproj -c Release -r win-x64 `
+  --self-contained false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+  -p:DebugType=None -p:DebugSymbols=false -o dist
+```
+
+> 默认是**框架依赖**单文件（约 0.7 MB），需要 .NET 10 Desktop Runtime（PCL CE 本身也依赖它，
+> 通常已安装）。如果要在未安装 .NET 10 的电脑上使用，把 `--self-contained false` 换成
+> `--self-contained true`（体积会大很多）。
+
 ## 它做了什么
 
 把 `PCL.RestrictedFeaturePolicy` 的两个方法体各改写 3 个字节：
@@ -60,17 +85,45 @@
 
 - Windows 10 1809 或更高（官方 PCL CE 的运行要求）
 - 官方 PCL CE **单文件** exe（v2.15.1 x64 已测试）
-- .NET 10 SDK（仅构建工具时需要）；运行工具需要 .NET 10 Runtime
+- .NET 10 SDK（构建工具时需要）
+- .NET 10 Runtime（运行命令行版）/ .NET 10 Desktop Runtime（运行 GUI 版）
 
 ## 构建
 
 ```powershell
+# 一次构建全部项目（核心库 / 命令行 / GUI）
+dotnet build PclCeRegionPatch.slnx -c Release
+
+# 单独构建命令行版
 dotnet build src/PclCeRegionPatch/PclCeRegionPatch.csproj -c Release
 ```
 
-产物：`src/PclCeRegionPatch/bin/Release/net10.0/pcl-ce-regionpatch.dll`
+产物：
 
-## 使用
+- 命令行：`src/PclCeRegionPatch/bin/Release/net10.0/pcl-ce-regionpatch.dll`
+- GUI：`src/PclCeRegionPatch.Gui/bin/Release/net10.0-windows/pcl-ce-regionpatch-gui.exe`
+  （单文件发布方式见上文）
+
+## 仓库结构
+
+```text
+src/PclCeRegionPatch.Core/   # 核心库：定位内嵌程序集、解析 PE、打 IL 补丁
+src/PclCeRegionPatch/        # 命令行版（跨平台，net10.0）
+src/PclCeRegionPatch.Gui/    # Windows 图形界面版（WinForms，net10.0-windows）
+docs/                        # 截图
+```
+
+## 用法
+
+### GUI 版
+
+直接双击 `pcl-ce-regionpatch-gui.exe`（或从 Release 下载）：
+
+1. 选择 / 拖入官方 `PCL2_CE_Release_x64.exe`；
+2. 确认信息与默认输出路径（默认在原文件旁生成 `.patched.exe`）；
+3. 点击「开始打补丁」，成功后点「打开输出位置」即可。
+
+### 命令行版
 
 ```powershell
 # 默认输出 <输入文件名>.patched.exe，且与输入放在同一目录
@@ -115,6 +168,10 @@ PCL CE 使用 .NET **单文件发布**：exe = apphost PE + 追加的 bundle，�
 ## 已验证 / 已知限制
 
 已验证：官方 PCL Community Edition v2.15.1 x64（`PCL2_CE_Release_x64.exe`，23,486,024 字节）。
+
+- 命令行版与 GUI 版共用同一套核心逻辑（`PclCeRegionPatch.Core`），打补丁后文件逐字节一致；
+- GUI 版已实际测试：选择官方 exe → 点击打补丁 → 输出文件与命令行结果 SHA256 完全相同；
+- 修改后文件与官方原版大小相同，仅 6 字节差异，官方内嵌密钥保持原样。
 
 限制：
 

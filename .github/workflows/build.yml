@@ -19,15 +19,31 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore src/PclCeRegionPatch/PclCeRegionPatch.csproj
+        run: dotnet restore PclCeRegionPatch.slnx
 
       - name: Build
-        run: dotnet build src/PclCeRegionPatch/PclCeRegionPatch.csproj -c Release --no-restore
+        run: dotnet build PclCeRegionPatch.slnx -c Release --no-restore
 
-      - name: Upload artifact
+      - name: Publish GUI (single-file)
+        run: >
+          dotnet publish src/PclCeRegionPatch.Gui/PclCeRegionPatch.Gui.csproj
+          -c Release -r win-x64 --self-contained false
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:DebugType=None -p:DebugSymbols=false
+          -o dist
+
+      - name: Upload CLI
         uses: actions/upload-artifact@v4
         with:
-          name: pcl-ce-regionpatch
+          name: cli
           path: |
             src/PclCeRegionPatch/bin/Release/net10.0/pcl-ce-regionpatch.dll
+            src/PclCeRegionPatch/bin/Release/net10.0/PclCeRegionPatch.Core.dll
             src/PclCeRegionPatch/bin/Release/net10.0/Mono.Cecil.dll
+
+      - name: Upload GUI
+        uses: actions/upload-artifact@v4
+        with:
+          name: gui
+          path: dist/pcl-ce-regionpatch-gui.exe

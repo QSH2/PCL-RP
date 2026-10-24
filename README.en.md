@@ -5,14 +5,40 @@
 > upstream repositories.
 
 **This repository contains no PCL source code, binaries, or credentials, and offers no
-pre-patched downloads.** It provides a small command-line tool that applies a controlled,
-local modification to a **user-owned** official PCL CE single-file executable, removing the
-"unavailable in mainland China" gate.
+pre-patched downloads.** It provides tools that apply a controlled, local modification to a
+**user-owned** official PCL CE single-file executable, removing the "unavailable in mainland
+China" gate.
 
 Upstream credits:
 
 - **Plain Craft Launcher 2 (PCL)** by **LTCat (龙腾猫跃)** — [repository](https://github.com/Meloong-Git/PCL) · [sponsor](https://afdian.com/a/LTCat)
 - **PCL Community Edition (PCL CE)** maintained by **PCL-Community** — [repository](https://github.com/PCL-Community/PCL-CE)
+
+## GUI version
+
+![GUI](docs/screenshot.png)
+
+There is a Windows GUI (`src/PclCeRegionPatch.Gui`, WinForms / .NET 10):
+
+- pick or **drag & drop** the official `PCL2_CE_Release_x64.exe` — the file size, version,
+  embedded assembly and the **region-restriction status** are shown automatically;
+- one click generates `.patched.exe` (custom output path supported), with an "open output
+  location" button;
+- success state:
+
+![Patched](docs/screenshot-success.png)
+
+Download `pcl-ce-regionpatch-gui.exe` from Releases, or build it yourself:
+
+```powershell
+dotnet publish src/PclCeRegionPatch.Gui/PclCeRegionPatch.Gui.csproj -c Release -r win-x64 `
+  --self-contained false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+  -p:DebugType=None -p:DebugSymbols=false -o dist
+```
+
+The default publish is framework-dependent (about 0.7 MB) and requires the .NET 10 Desktop
+Runtime (PCL CE itself requires it too). Use `--self-contained true` if you need a standalone
+executable (much larger).
 
 ## Background
 
@@ -45,15 +71,25 @@ bundle content and embedded credentials are left untouched.
 
 - Windows 10 1809+ (the requirement of official PCL CE)
 - An official **single-file** PCL CE build (tested with v2.15.1 x64)
-- .NET 10 SDK to build the tool; .NET 10 Runtime to run it
+- .NET 10 SDK to build; .NET 10 Runtime (CLI) / .NET 10 Desktop Runtime (GUI) to run
 
 ## Build
 
 ```powershell
-dotnet build src/PclCeRegionPatch/PclCeRegionPatch.csproj -c Release
+# build everything (core library / CLI / GUI)
+dotnet build PclCeRegionPatch.slnx -c Release
 ```
 
-## Usage
+## Repository layout
+
+```text
+src/PclCeRegionPatch.Core/   # core library: locate embedded assembly, parse PE, patch IL
+src/PclCeRegionPatch/        # command-line tool (cross-platform, net10.0)
+src/PclCeRegionPatch.Gui/    # Windows GUI (WinForms, net10.0-windows)
+docs/                        # screenshots
+```
+
+## CLI usage
 
 ```powershell
 # default output: <input>.patched.exe next to the input
@@ -69,7 +105,7 @@ pcl-ce-regionpatch --check PCL2_CE_Release_x64_patched.exe
 ## How it works
 
 PCL CE is published as a .NET **single-file** executable (apphost PE + appended bundle; the main
-assembly `Plain Craft Launcher 2.dll` is embedded uncompressed). The tool:
+assembly `Plain Craft Launcher 2.dll` is embedded uncompressed). The shared core library:
 
 1. locates the embedded assembly via metadata strings unique to it, validating the PE and requiring
    an `IL-only` image (ReadyToRun / non-.NET candidates are rejected);
@@ -80,7 +116,8 @@ assembly `Plain Craft Launcher 2.dll` is embedded uncompressed). The tool:
 
 ## Verified / limitations
 
-Verified against the official PCL CE v2.15.1 x64 build (23,486,024 bytes).
+Verified against the official PCL CE v2.15.1 x64 build (23,486,024 bytes). The CLI and GUI share
+the same core logic and produce byte-identical output; the GUI flow was tested end-to-end.
 
 Limitations: only works on single-file builds whose embedded main assembly is IL-only; if upstream
 switches to ReadyToRun, compressed bundles, or renames the type/methods, the tool fails loudly
@@ -91,6 +128,16 @@ instead of producing a broken file. The patch invalidates the official sigstore 
 - Only obtain the original executable from the official release page.
 - Never download or share "pre-patched / unlocked" executables from third parties.
 - Do not upload patched binaries or official executables to this repository's issues/PRs.
+
+## Scope & compliance note
+
+This is an independent third-party tool. It does not advertise to or target any specific country
+or region, provides no pre-patched binaries and collects no user data.
+
+Upstream added the region restriction for its own legal/compliance reasons; this project only
+removes that technical restriction. Before using it, make sure that you own a legitimate copy of
+the software, that your actions (patching and running the patched software) comply with the laws
+of your jurisdiction, and that you understand the patched software is used at your own risk.
 
 ## License & responsibility
 

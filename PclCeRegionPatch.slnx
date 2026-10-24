@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PclCeRegionPatch.Core/PclCeRegionPatch.Core.csproj" />
+    <Project Path="src/PclCeRegionPatch.Gui/PclCeRegionPatch.Gui.csproj" />
+    <Project Path="src/PclCeRegionPatch/PclCeRegionPatch.csproj" />
+  </Folder>
+</Solution>

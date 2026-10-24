@@ -6,7 +6,7 @@ namespace PclCeRegionPatch;
 internal static class Program
 {
     private const string ToolName = "pcl-ce-regionpatch";
-    private const string ToolVersion = "1.0.0";
+    private const string ToolVersion = "1.1.0";
 
     private static int Main(string[] args)
     {
@@ -67,32 +67,28 @@ internal static class Program
         var data = File.ReadAllBytes(input);
         Console.WriteLine($"input     : {Path.GetFullPath(input)} ({data.Length:N0} bytes)");
 
-        var assemblyStart = AssemblyLocator.Locate(data);
-        if (assemblyStart < 0)
+        PatchInspection inspection;
+        try
         {
-            Console.Error.WriteLine(
-                "error: could not find the embedded PCL CE main assembly. " +
-                "Make sure the input is an official PCL CE single-file build (not a folder build or an already repacked file).");
+            inspection = PatchEngine.Inspect(data);
+        }
+        catch (PatchNotSupportedException ex)
+        {
+            Console.Error.WriteLine($"error: {ex.Message}");
             return 3;
         }
 
-        var image = PeImage.Parse(data, assemblyStart);
-        Console.WriteLine($"assembly  : file offset 0x{assemblyStart:X}, image 0x{image.ImageSize:X}, " +
-                          $"sections {image.SectionCount}, IL-only {image.IsIlOnly}, managed-native-header {image.HasManagedNativeHeader}");
-
-        if (!image.IsIlOnly)
-        {
-            Console.Error.WriteLine("error: the embedded assembly is not IL-only (ReadyToRun?); refusing to patch.");
-            return 3;
-        }
+        Console.WriteLine($"assembly  : file offset 0x{inspection.AssemblyStart:X}, image 0x{inspection.ImageSize:X}, " +
+                          $"sections {inspection.SectionCount}, IL-only {inspection.IsIlOnly}, " +
+                          $"managed-native-header {inspection.HasManagedNativeHeader}");
+        foreach (var method in inspection.Methods) Console.WriteLine($"method    : {method}");
 
         if (checkOnly)
         {
-            var patched = IlPatcher.IsPatched(data, assemblyStart, image);
-            Console.WriteLine(patched
+            Console.WriteLine(inspection.IsPatched
                 ? "status    : PATCHED (the region restriction is disabled)"
                 : "status    : NOT PATCHED (the region restriction is active)");
-            return patched ? 0 : 1;
+            return inspection.IsPatched ? 0 : 1;
         }
 
         output ??= Path.Combine(Path.GetDirectoryName(Path.GetFullPath(input))!,
@@ -102,12 +98,22 @@ internal static class Program
         if (string.Equals(Path.GetFullPath(input), output, StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException("input and output must be different files");
 
-        var report = IlPatcher.Patch(data, assemblyStart, image);
+        PatchResult result;
+        try
+        {
+            result = PatchEngine.Apply(data);
+        }
+        catch (PatchNotSupportedException ex)
+        {
+            Console.Error.WriteLine($"error: {ex.Message}");
+            return 3;
+        }
+
         File.WriteAllBytes(output, data);
 
         Console.WriteLine($"output    : {output} ({data.Length:N0} bytes)");
-        foreach (var line in report.PatchedMethods) Console.WriteLine($"patched   : {line}");
-        foreach (var line in report.Verification) Console.WriteLine($"verify    : {line}");
+        foreach (var line in result.PatchedMethods) Console.WriteLine($"patched   : {line}");
+        foreach (var line in result.Verification) Console.WriteLine($"verify    : {line}");
         Console.WriteLine();
         Console.WriteLine("done. The output is a MODIFIED copy of the official build: keep it for personal use only,");
         Console.WriteLine("do not redistribute it, and never share a copy that contains upstream credentials.");
