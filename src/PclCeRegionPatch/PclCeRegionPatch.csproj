@@ -8,7 +8,7 @@
         <LangVersion>latest</LangVersion>
         <AssemblyName>pcl-ce-regionpatch</AssemblyName>
         <RootNamespace>PclCeRegionPatch</RootNamespace>
-        <Version>1.2.3</Version>
+        <Version>1.2.4</Version>
         <Authors>PCL-CE-RegionPatch contributors</Authors>
         <Description>Command-line patcher that removes the mainland-China region gate from a user-owned official PCL CE single-file build.</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>

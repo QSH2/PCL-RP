@@ -4,7 +4,7 @@
 > PCL-Community or LTCat (龙腾猫跃). Please do not report issues caused by this tool to the
 > upstream repositories.
 >
-> Author: **清水Shimizu** · GitHub [@QSH36](https://github.com/QSH36) · e-mail shimizu-sk@qq.com · contact for removal if anything infringes.
+> Author: **清水Shimizu** · GitHub [@QSH2](https://github.com/QSH2) · e-mail shimizu-sk@qq.com · contact for removal if anything infringes.
 
 **This repository contains no PCL source code, binaries, or credentials, and offers no
 pre-patched downloads.** It provides local tools (CLI + Windows GUI) that apply controlled
@@ -165,12 +165,14 @@ laws and the upstream licenses.
 ## Author
 
 - Author: **清水Shimizu**
-- GitHub: [@QSH36](https://github.com/QSH36)
+- GitHub: [@QSH2](https://github.com/QSH2)
 - E-mail: shimizu-sk@qq.com
 - Contact the author for removal if anything infringes.
 
 ## Changelog
 
+- **v1.2.4**: author credits and GitHub link updated to the new account [@QSH2](https://github.com/QSH2)
+  (the previous account is no longer available).
 - **v1.2.3**: PCL-style icon (navy frame + blue inner square + white "P"); fixed the
   "re-patch" issue where patching an already-patched PCL official build failed the
   Minecraft-card visibility check (now idempotent; CE double-patching stays byte-identical).

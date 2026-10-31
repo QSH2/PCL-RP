@@ -10,7 +10,7 @@ namespace PclCeRegionPatch.Gui;
 internal sealed class MainForm : Form
 {
     private const string AppTitle = "PCL 下载限制补丁工具";
-    private const string AppVersion = "1.2.3";
+    private const string AppVersion = "1.2.4";
 
     private static readonly Color Accent = Color.FromArgb(0, 102, 184);
     private static readonly Color OkColor = Color.FromArgb(16, 124, 16);
@@ -207,12 +207,12 @@ internal sealed class MainForm : Form
 
         var lnkGitHub = new LinkLabel
         {
-            Text = "GitHub：QSH36",
+            Text = "GitHub：QSH2",
             Location = new Point(166, 576),
             Size = new Size(118, 18),
             LinkColor = Accent
         };
-        lnkGitHub.LinkClicked += (_, _) => OpenUrl("https://github.com/QSH36");
+        lnkGitHub.LinkClicked += (_, _) => OpenUrl("https://github.com/QSH2");
         Controls.Add(lnkGitHub);
 
         var lnkMail = new LinkLabel

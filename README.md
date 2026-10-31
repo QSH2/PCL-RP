@@ -3,7 +3,7 @@
 > **独立的第三方工具**，与 PCL-Community、龙腾猫跃（LTCat）无隶属、无授权、无背书关系。
 > 请勿向官方仓库反馈由本工具产生的问题。
 >
-> 制作人：**清水Shimizu** · GitHub [@QSH36](https://github.com/QSH36) · 邮箱 shimizu-sk@qq.com · 如有侵权请联系删除
+> 制作人：**清水Shimizu** · GitHub [@QSH2](https://github.com/QSH2) · 邮箱 shimizu-sk@qq.com · 如有侵权请联系删除
 
 **本仓库不包含任何 PCL 的源代码、二进制或密钥，也不提供任何成品下载。** 它只提供本地工具
 （命令行版与 Windows 图形界面版）：在**你自己的电脑上**，对**你自己合法获取**的官方 exe
@@ -171,12 +171,13 @@ docs/                        # 截图与图标预览
 ## 制作人
 
 - 制作人：**清水Shimizu**
-- GitHub：[@QSH36](https://github.com/QSH36)
+- GitHub：[@QSH2](https://github.com/QSH2)
 - 联系邮箱：shimizu-sk@qq.com
 - 如有侵权请联系删除（同上邮箱）。
 
 ## 更新日志
 
+- **v1.2.4**：作者署名与 GitHub 链接更新为新账号 [@QSH2](https://github.com/QSH2)（旧账号已无法使用）。
 - **v1.2.3**：图标改为 PCL 风格（深蓝外框 + 亮蓝内层 + 白色 "P"）；修复「重新打补丁」的一个
   问题：对已经打过补丁的 PCL 官方版再次打补丁时，Minecraft 卡片可见性检查会误报失败，现已
   幂等处理（重复打补丁不再报错，CE 重复打补丁输出保持逐字节一致）。
